@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VideoSum - Smart YouTube Summaries</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+      .container {
+        width: 100%;
+        max-width: 480px;
+        background: #fff;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      .logo {
+        text-align: center;
+        margin-bottom: 10px;
+      }
+
+      .logo h1 {
+        font-size: 36px;
+        font-weight: 700;
+        margin: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .tagline {
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 30px;
+      }
+
+      .info-box {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8eaf6 100%);
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        border-left: 4px solid #667eea;
+      }
+
+      .info-box h3 {
+        margin: 0 0 8px 0;
+        font-size: 16px;
+        color: #333;
+      }
+
+      .info-box p {
+        margin: 0;
+        font-size: 13px;
+        color: #666;
+        line-height: 1.5;
+      }
+
+      h2 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 25px;
+        font-size: 28px;
+        font-weight: 600;
+      }
+
+      .error-message {
+        background: #fee;
+        color: #c33;
+        padding: 12px;
+        border-radius: 8px;
+        margin: 10px 0;
+        font-size: 14px;
+        display: none;
+        border-left: 4px solid #c33;
+      }
+
+      .success-message {
+        background: #efe;
+        color: #3c3;
+        padding: 12px;
+        border-radius: 8px;
+        margin: 10px 0;
+        font-size: 14px;
+        display: none;
+        border-left: 4px solid #3c3;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        padding: 14px 16px;
+        margin: 10px 0;
+        border-radius: 8px;
+        border: 2px solid #e0e0e0;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        font-family: inherit;
+      }
+      input:focus,
+      textarea:focus,
+      select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+      select {
+        cursor: pointer;
+        background: white;
+      }
+      textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+      button {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 8px;
+        color: #fff;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        margin-top: 10px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+      }
+      button:active {
+        transform: translateY(0);
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .link {
+        margin-top: 15px;
+        text-align: center;
+        color: #667eea;
+        cursor: pointer;
+        display: block;
+        font-size: 14px;
+        transition: color 0.2s ease;
+      }
+      .link:hover {
+        color: #764ba2;
+        text-decoration: underline;
+      }
+      #summaryBox {
+        margin-top: 20px;
+        padding: 18px;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8eaf6 100%);
+        border-radius: 10px;
+        border-left: 4px solid #667eea;
+        display: none;
+        white-space: pre-wrap;
+        font-size: 14px;
+        line-height: 1.6;
+        color: #333;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      .hidden {
+        display: none;
+      }
+      #logoutBtn {
+        margin-top: 10px;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      }
+      #logoutBtn:hover {
+        box-shadow: 0 6px 20px rgba(245, 87, 108, 0.4);
+      }
+
+      /* Loading Animation */
+      .loader {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+      .loader-text {
+        font-size: 16px;
+        color: #667eea;
+        font-weight: 500;
+      }
+      .dots {
+        display: flex;
+        gap: 5px;
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #667eea;
+        animation: bounce 1.4s infinite ease-in-out both;
+      }
+      .dot:nth-child(1) {
+        animation-delay: -0.32s;
+      }
+      .dot:nth-child(2) {
+        animation-delay: -0.16s;
+      }
+      @keyframes bounce {
+        0%,
+        80%,
+        100% {
+          transform: scale(0);
+          opacity: 0.5;
+        }
+        40% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      /* Mobile Responsiveness */
+      @media (max-width: 480px) {
+        body {
+          padding: 15px;
+          align-items: flex-start;
+          padding-top: 30px;
+        }
+        .container {
+          padding: 30px 20px;
+          border-radius: 12px;
+          box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+        }
+        .logo h1 {
+          font-size: 32px;
+        }
+        .tagline {
+          font-size: 13px;
+          margin-bottom: 20px;
+        }
+        .info-box {
+          padding: 12px;
+          margin-bottom: 20px;
+        }
+        .info-box h3 {
+          font-size: 15px;
+        }
+        .info-box p {
+          font-size: 12px;
+        }
+        h2 {
+          font-size: 24px;
+          margin-bottom: 20px;
+        }
+        input,
+        textarea,
+        select {
+          padding: 12px 14px;
+          font-size: 16px;
+          margin: 8px 0;
+        }
+        button {
+          padding: 13px;
+          font-size: 15px;
+          margin-top: 8px;
+        }
+        #summaryBox {
+          margin-top: 15px;
+          padding: 15px;
+          font-size: 13px;
+          max-height: 300px;
+        }
+        .link {
+          font-size: 13px;
+          margin-top: 12px;
+        }
+        .loader-text {
+          font-size: 14px;
+        }
+        .dot {
+          width: 7px;
+          height: 7px;
+        }
+      }
+
+      @media (max-width: 360px) {
+        .container {
+          padding: 25px 15px;
+        }
+        .logo h1 {
+          font-size: 28px;
+        }
+        h2 {
+          font-size: 22px;
+        }
+        input,
+        textarea,
+        select {
+          padding: 11px 12px;
+          font-size: 15px;
+        }
+        button {
+          padding: 12px;
+          font-size: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- AUTH SECTION -->
+    <div class="container" id="authSection">
+      <div class="logo">
+        <h1>VideoSum</h1>
+      </div>
+      <div class="tagline">Smart YouTube video summaries in seconds</div>
+
+      <h2 id="formTitle">Create Account</h2>
+      <div id="authError" class="error-message"></div>
+      <input type="text" id="username" placeholder="Username" />
+      <input type="password" id="password" placeholder="Password" />
+      <button onclick="submitAuth()">Submit</button>
+      <span id="switch" class="link" onclick="toggleForm()"
+        >Already have an account? Login</span
+      >
+    </div>
+
+    <!-- SUMMARY SECTION -->
+    <div class="container hidden" id="summarySection">
+      <div class="logo">
+        <h1>VideoSum</h1>
+      </div>
+      <div class="tagline">Smart YouTube video summaries in seconds</div>
+
+      <div class="info-box">
+        <h3>How it works</h3>
+        <p>
+          Paste any YouTube URL and choose your preferred summary style. Get
+          instant, AI-powered summaries to save time.
+        </p>
+      </div>
+
+      <input type="text" id="videoUrl" placeholder="Enter YouTube URL" />
+      <select id="promptSelect">
+        <option value="brief">Brief Summary</option>
+        <option value="detailed">Detailed Summary</option>
+        <option value="keypoints">Key Points Only</option>
+      </select>
+      <button onclick="summarizeVideo()">Summarize</button>
+      <button id="logoutBtn" onclick="logout()">Logout</button>
+      <div id="summaryBox"></div>
+    </div>
+
+    <script>
+      let isLogin = false;
+
+      function toggleForm() {
+        isLogin = !isLogin;
+        document.getElementById("formTitle").innerText = isLogin
+          ? "Welcome Back"
+          : "Create Account";
+        document.getElementById("switch").innerText = isLogin
+          ? "Don't have an account? Register"
+          : "Already have an account? Login";
+        hideError();
+      }
+
+      function showError(message) {
+        const errorDiv = document.getElementById("authError");
+        errorDiv.innerText = message;
+        errorDiv.style.display = "block";
+      }
+
+      function hideError() {
+        const errorDiv = document.getElementById("authError");
+        errorDiv.style.display = "none";
+      }
+
+      async function submitAuth() {
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value.trim();
+
+        if (!username || !password) {
+          showError("Please fill in all fields");
+          return;
+        }
+
+        hideError();
+        const endpoint = isLogin ? "/api/login" : "/api/register";
+
+        try {
+          const res = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            if (isLogin) {
+              document.getElementById("authSection").classList.add("hidden");
+              document
+                .getElementById("summarySection")
+                .classList.remove("hidden");
+            } else {
+              document.getElementById("username").value = "";
+              document.getElementById("password").value = "";
+              isLogin = true;
+              toggleForm();
+            }
+          } else {
+            showError("Error occurred at server side. Please try again later.");
+          }
+        } catch (err) {
+          showError("Connection failed. Please try again.");
+        }
+      }
+
+      async function summarizeVideo() {
+        const videoUrl = document.getElementById("videoUrl").value.trim();
+        const promptType = document.getElementById("promptSelect").value;
+
+        const prompts = {
+          brief: "Provide a brief summary of this video in 2-3 sentences.",
+          detailed:
+            "Provide a detailed summary of this video covering all main points.",
+          keypoints: "List the key points from this video in bullet format.",
+        };
+
+        if (!videoUrl) {
+          const summaryBox = document.getElementById("summaryBox");
+          summaryBox.innerText = "Please enter a YouTube URL";
+          summaryBox.style.display = "block";
+          return;
+        }
+
+        const summaryBox = document.getElementById("summaryBox");
+        summaryBox.innerHTML = `
+          <div class="loader">
+            <span class="loader-text">Summarizing</span>
+            <div class="dots">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+          </div>
+        `;
+        summaryBox.style.display = "block";
+
+        try {
+          const res = await fetch("/api/summarize", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              url: videoUrl,
+              prompt: prompts[promptType],
+            }),
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            summaryBox.innerText = data.summary;
+          } else {
+            summaryBox.innerText =
+              "Error occurred at server side. Please try again later.";
+          }
+        } catch (err) {
+          summaryBox.innerText = `Connection failed. Please try again.`;
+        }
+      }
+
+      function logout() {
+        document.getElementById("authSection").classList.remove("hidden");
+        document.getElementById("summarySection").classList.add("hidden");
+        document.getElementById("username").value = "";
+        document.getElementById("password").value = "";
+        document.getElementById("videoUrl").value = "";
+        document.getElementById("promptSelect").selectedIndex = 0;
+        document.getElementById("summaryBox").style.display = "none";
+        hideError();
+        isLogin = false;
+        toggleForm();
+      }
+
+      // Allow Enter key to submit
+      document.getElementById("password").addEventListener("keypress", (e) => {
+        if (e.key === "Enter") submitAuth();
+      });
+    </script>
+  </body>
+</html>
